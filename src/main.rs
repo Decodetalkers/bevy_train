@@ -12,6 +12,12 @@ struct PlayerState {
 #[derive(Debug, Component)]
 struct CenterPlayer;
 
+#[derive(Debug, Component)]
+struct SpeedPanel;
+
+#[derive(Debug, Component)]
+struct PosPanel;
+
 fn roate(
     mut query: Query<&mut Transform, With<CenterPlayer>>,
     timer: Res<Time>,
@@ -38,41 +44,94 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
         CenterPlayer,
     ));
 
-    commands.spawn(TextBundle {
-        text: Text {
-            sections: vec![
-                TextSection {
-                    value: "X:".to_string(),
-                    style: TextStyle {
-                        font_size: 50.0,
-                        color: TEXT_COLOR,
-                        ..default()
-                    },
+    commands
+        .spawn(
+            TextBundle {
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "X:".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: TEXT_COLOR,
+                                ..default()
+                            },
+                        },
+                        TextSection {
+                            value: "Y:".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: TEXT_COLOR,
+                                ..default()
+                            },
+                        },
+                    ],
+                    alignment: TextAlignment::Left,
+                    ..Default::default()
                 },
-                TextSection {
-                    value: "Y:".to_string(),
-                    style: TextStyle {
-                        font_size: 50.0,
-                        color: TEXT_COLOR,
-                        ..default()
-                    },
+                ..default()
+            }
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(10.0),
+                left: Val::Px(10.0),
+                ..default()
+            }),
+        )
+        .insert(SpeedPanel);
+
+    commands
+        .spawn(
+            TextBundle {
+                text: Text {
+                    sections: vec![
+                        TextSection {
+                            value: "PosX:".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: TEXT_COLOR,
+                                ..default()
+                            },
+                        },
+                        TextSection {
+                            value: "PosY:".to_string(),
+                            style: TextStyle {
+                                font_size: 50.0,
+                                color: TEXT_COLOR,
+                                ..default()
+                            },
+                        },
+                    ],
+
+                    alignment: TextAlignment::Left,
+                    ..Default::default()
                 },
-            ],
-            alignment: TextAlignment::Left,
-            ..Default::default()
-        },
-        style: Style {
-            position_type: PositionType::Absolute,
-            ..default()
-        },
-        ..default()
-    });
+                ..default()
+            }
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(10.0),
+                right: Val::Px(10.0),
+                ..default()
+            }),
+        )
+        .insert(PosPanel);
 }
 
-fn handle_text(state: Res<PlayerState>, mut query: Query<&mut Text>) {
+fn handle_speedtext(state: Res<PlayerState>, mut query: Query<&mut Text, With<SpeedPanel>>) {
     let mut text = query.single_mut();
     text.sections[0].value = format!("X: {} ", state.x);
     text.sections[1].value = format!("Y: {} ", state.y);
+}
+
+fn handle_postext(
+    player_query: Query<&Transform, With<CenterPlayer>>,
+    mut query: Query<&mut Text, With<PosPanel>>,
+) {
+    let translation = player_query.single().translation;
+    let mut text = query.single_mut();
+    text.sections[0].value = format!("PosX: {} ", translation.x);
+    text.sections[1].value = format!("PosY: {} ", translation.y);
 }
 
 fn handle_move(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
@@ -95,7 +154,7 @@ fn main() {
         .insert_resource(PlayerState::default())
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(FixedUpdate, (handle_text, roate))
+        .add_systems(FixedUpdate, (handle_speedtext, handle_postext, roate))
         .add_systems(Update, handle_move)
         .run();
 }
