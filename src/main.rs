@@ -2,6 +2,7 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
+use rand::Rng;
 
 const CAT_SIZE: Vec3 = Vec3::from_array([40.0, 40.0, 0.0]);
 const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
@@ -16,10 +17,13 @@ const TOP_WALL: f32 = 500.;
 
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
+const MIRROR_SIZE: Vec3 = Vec3::from_array([200.0, 40.0, 0.0]);
+
 #[derive(Default, Debug, Resource)]
 struct PlayerState {
     x: f32,
     y: f32,
+    mirror_exist: bool,
 }
 
 #[derive(Debug, Component)]
@@ -36,6 +40,9 @@ struct CollisionEvent;
 
 #[derive(Component)]
 struct Collider;
+
+#[derive(Component)]
+struct Mirror;
 
 #[derive(Bundle)]
 struct WallBundle {
@@ -122,6 +129,59 @@ fn handle_move(
 
     player_trans.translation.x += state.x * timer.period.as_secs_f32();
     player_trans.translation.y += state.y * timer.period.as_secs_f32();
+}
+
+fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
+    if state.mirror_exist {
+        return;
+    }
+
+    state.mirror_exist = true;
+    let mut rng = rand::thread_rng();
+
+    let pos_x: f32 = rng.gen_range(-900.0..900.0);
+    let pos_y: f32 = rng.gen_range(-500.0..500.0);
+    let roat_z: f32 = rng.gen();
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: Vec3 {
+                    x: pos_x,
+                    y: pos_y,
+                    z: 0.0,
+                },
+                rotation: Quat::from_rotation_z(roat_z),
+                scale: MIRROR_SIZE,
+                ..default()
+            },
+            sprite: Sprite { ..default() },
+            ..default()
+        },
+        Mirror,
+        Collider,
+    ));
+
+    let pos_x: f32 = rng.gen_range(-800.0..800.0);
+    let pos_y: f32 = rng.gen_range(-300.0..300.0);
+    let roat_z: f32 = rng.gen();
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform {
+                translation: Vec3 {
+                    x: pos_x,
+                    y: pos_y,
+                    z: 0.0,
+                },
+                rotation: Quat::from_rotation_z(roat_z),
+                scale: MIRROR_SIZE,
+                ..default()
+            },
+            sprite: Sprite { ..default() },
+            ..default()
+        },
+        Mirror,
+        Collider,
+    ));
 }
 
 fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
@@ -235,40 +295,62 @@ fn handle_postext(
 
 fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::Left) {
-        state.x -= 50.0;
+        if state.x.abs() < 500. || state.x > -500.0 {
+            state.x -= 50.0;
+        }
     }
     if keyboard_input.pressed(KeyCode::Right) {
-        state.x += 50.0;
+        if state.x.abs() < 500. || state.x < 500.0 {
+            state.x += 50.0;
+        }
     }
     if keyboard_input.pressed(KeyCode::Down) {
-        state.y -= 50.0;
+        if state.y.abs() < 500. || state.y > -500.0 {
+            state.y -= 50.0;
+        }
     }
     if keyboard_input.pressed(KeyCode::Up) {
-        state.y += 50.0;
+        if state.y.abs() < 500. || state.y < 500.0 {
+            state.y += 50.0;
+        }
     }
 }
 
 fn check_collider(
+    mut commands: Commands,
     mut state: ResMut<PlayerState>,
     query: Query<&Transform, With<CenterPlayer>>,
-    collider_query: Query<&Transform, With<Collider>>,
+    collider_query: Query<(&Transform, Option<&Mirror>), With<Collider>>,
+    mirror_query: Query<Entity, With<Mirror>>,
 ) {
     let player_trans = query.single().translation;
     let scale = query.single().scale;
-    for transform in &collider_query {
+    let mut delete_mirror = false;
+    for (transform, mirror_if) in &collider_query {
         let collision = collide(
             player_trans,
             scale.truncate(),
             transform.translation,
             transform.scale.truncate(),
         );
+
         if let Some(coll) = collision {
+            if mirror_if.is_some() {
+                delete_mirror = true;
+            }
             match coll {
                 Collision::Left | Collision::Right => state.x = -state.x,
                 Collision::Top | Collision::Bottom => state.y = -state.y,
                 Collision::Inside => { /* do nothing */ }
             }
+            continue;
         }
+    }
+    if delete_mirror {
+        for entity in &mirror_query {
+            commands.entity(entity).despawn();
+        }
+        state.mirror_exist = false;
     }
 }
 
@@ -282,6 +364,7 @@ fn main() {
             (
                 roate,
                 check_collider,
+                generate_mirror,
                 handle_state_update.after(check_collider),
                 handle_move.after(handle_state_update),
             ),
