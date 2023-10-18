@@ -115,13 +115,13 @@ fn roate(mut query: Query<&mut Transform, With<CenterPlayer>>, timer: Res<Time>)
 
 fn handle_move(
     mut query: Query<&mut Transform, With<CenterPlayer>>,
-    timer: Res<Time>,
+    timer: Res<FixedTime>,
     state: Res<PlayerState>,
 ) {
     let mut player_trans = query.single_mut();
 
-    player_trans.translation.x += state.x * timer.delta_seconds();
-    player_trans.translation.y += state.y * timer.delta_seconds();
+    player_trans.translation.x += state.x * timer.period.as_secs_f32();
+    player_trans.translation.y += state.y * timer.period.as_secs_f32();
 }
 
 fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
