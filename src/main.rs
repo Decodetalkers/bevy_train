@@ -108,13 +108,17 @@ impl WallBundle {
     }
 }
 
-fn roate(
+fn roate(mut query: Query<&mut Transform, With<CenterPlayer>>, timer: Res<Time>) {
+    let mut player_trans = query.single_mut();
+    player_trans.rotate_z(5.0 * timer.delta_seconds());
+}
+
+fn handle_move(
     mut query: Query<&mut Transform, With<CenterPlayer>>,
     timer: Res<Time>,
     state: Res<PlayerState>,
 ) {
     let mut player_trans = query.single_mut();
-    player_trans.rotate_z(5.0 * timer.delta_seconds());
 
     player_trans.translation.x += state.x * timer.delta_seconds();
     player_trans.translation.y += state.y * timer.delta_seconds();
@@ -229,7 +233,7 @@ fn handle_postext(
     text.sections[1].value = format!("PosY: {} ", translation.y);
 }
 
-fn handle_move(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
+fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::Left) {
         state.x -= 50.0;
     }
@@ -273,7 +277,15 @@ fn main() {
         .insert_resource(PlayerState::default())
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(FixedUpdate, (handle_speedtext, handle_postext, roate))
-        .add_systems(Update, (check_collider, handle_move.after(check_collider)))
+        .add_systems(
+            FixedUpdate,
+            (
+                roate,
+                check_collider,
+                handle_state_update.after(check_collider),
+                handle_move.after(handle_state_update),
+            ),
+        )
+        .add_systems(Update, (handle_speedtext, handle_postext))
         .run();
 }
