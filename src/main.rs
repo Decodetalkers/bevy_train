@@ -8,11 +8,11 @@ const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 
 const WALL_THICKNESS: f32 = 10.0;
 // x coordinates
-const LEFT_WALL: f32 = -450.;
-const RIGHT_WALL: f32 = 450.;
+const LEFT_WALL: f32 = -900.;
+const RIGHT_WALL: f32 = 900.;
 // y coordinates
-const BOTTOM_WALL: f32 = -300.;
-const TOP_WALL: f32 = 300.;
+const BOTTOM_WALL: f32 = -500.;
+const TOP_WALL: f32 = 500.;
 
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
