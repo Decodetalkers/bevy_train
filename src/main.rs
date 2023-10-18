@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 const CAT_SIZE: Vec3 = Vec3::from_array([40.0, 40.0, 0.0]);
+const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 
 #[derive(Default, Debug, Resource)]
 struct PlayerState {
@@ -36,19 +37,55 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
         },
         CenterPlayer,
     ));
+
+    commands.spawn(TextBundle {
+        text: Text {
+            sections: vec![
+                TextSection {
+                    value: "X:".to_string(),
+                    style: TextStyle {
+                        font_size: 50.0,
+                        color: TEXT_COLOR,
+                        ..default()
+                    },
+                },
+                TextSection {
+                    value: "Y:".to_string(),
+                    style: TextStyle {
+                        font_size: 50.0,
+                        color: TEXT_COLOR,
+                        ..default()
+                    },
+                },
+            ],
+            alignment: TextAlignment::Left,
+            ..Default::default()
+        },
+        style: Style {
+            position_type: PositionType::Absolute,
+            ..default()
+        },
+        ..default()
+    });
+}
+
+fn handle_text(state: Res<PlayerState>, mut query: Query<&mut Text>) {
+    let mut text = query.single_mut();
+    text.sections[0].value = format!("X: {} ", state.x);
+    text.sections[1].value = format!("Y: {} ", state.y);
 }
 
 fn handle_move(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.just_pressed(KeyCode::Left) {
+    if keyboard_input.pressed(KeyCode::Left) {
         state.x -= 50.0;
     }
-    if keyboard_input.just_pressed(KeyCode::Right) {
+    if keyboard_input.pressed(KeyCode::Right) {
         state.x += 50.0;
     }
-    if keyboard_input.just_pressed(KeyCode::Down) {
+    if keyboard_input.pressed(KeyCode::Down) {
         state.y -= 50.0;
     }
-    if keyboard_input.just_pressed(KeyCode::Up) {
+    if keyboard_input.pressed(KeyCode::Up) {
         state.y += 50.0;
     }
 }
@@ -58,7 +95,7 @@ fn main() {
         .insert_resource(PlayerState::default())
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(FixedUpdate, roate)
+        .add_systems(FixedUpdate, (handle_text, roate))
         .add_systems(Update, handle_move)
         .run();
 }
