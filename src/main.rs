@@ -122,13 +122,13 @@ fn roate(mut query: Query<&mut Transform, With<CenterPlayer>>, timer: Res<Time>)
 
 fn handle_move(
     mut query: Query<&mut Transform, With<CenterPlayer>>,
-    timer: Res<FixedTime>,
+    timer: Res<Time<Fixed>>,
     state: Res<PlayerState>,
 ) {
     let mut player_trans = query.single_mut();
 
-    player_trans.translation.x += state.x * timer.period.as_secs_f32();
-    player_trans.translation.y += state.y * timer.period.as_secs_f32();
+    player_trans.translation.x += state.x * timer.delta().as_secs_f32();
+    player_trans.translation.y += state.y * timer.delta().as_secs_f32();
 }
 
 fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
