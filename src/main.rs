@@ -174,7 +174,7 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
                     y: pos_y,
                     z: 0.0,
                 },
-                rotation: Quat::from_rotation_z(PI / 4.),
+                rotation: Quat::from_rotation_z(roat_z),
                 scale: MIRROR_SIZE,
                 ..default()
             },
