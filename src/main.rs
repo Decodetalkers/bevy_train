@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
@@ -141,7 +143,7 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
 
     let pos_x: f32 = rng.gen_range(-900.0..900.0);
     let pos_y: f32 = rng.gen_range(-500.0..500.0);
-    let roat_z: f32 = rng.gen();
+    let roat_z: f32 = rng.gen_range(0. ..2. * PI);
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -163,7 +165,7 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
 
     let pos_x: f32 = rng.gen_range(-800.0..800.0);
     let pos_y: f32 = rng.gen_range(-300.0..300.0);
-    let roat_z: f32 = rng.gen();
+    let roat_z: f32 = rng.gen_range(0. ..2. * PI);
     commands.spawn((
         SpriteBundle {
             transform: Transform {
@@ -172,7 +174,7 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
                     y: pos_y,
                     z: 0.0,
                 },
-                rotation: Quat::from_rotation_z(roat_z),
+                rotation: Quat::from_rotation_z(PI / 4.),
                 scale: MIRROR_SIZE,
                 ..default()
             },
