@@ -300,25 +300,17 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
 //}
 
 fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<ButtonInput<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::ArrowLeft) {
-        if state.x.abs() < 500. || state.x > -500.0 {
-            state.x -= 50.0;
-        }
+    if keyboard_input.pressed(KeyCode::ArrowLeft) && (state.x.abs() < 500. || state.x > -500.0) {
+        state.x -= 50.0;
     }
-    if keyboard_input.pressed(KeyCode::AltRight) {
-        if state.x.abs() < 500. || state.x < 500.0 {
-            state.x += 50.0;
-        }
+    if keyboard_input.pressed(KeyCode::AltRight) && (state.x.abs() < 500. || state.x < 500.0) {
+        state.x += 50.0;
     }
-    if keyboard_input.pressed(KeyCode::ArrowDown) {
-        if state.y.abs() < 500. || state.y > -500.0 {
-            state.y -= 50.0;
-        }
+    if keyboard_input.pressed(KeyCode::ArrowDown) && (state.y.abs() < 500. || state.y > -500.0) {
+        state.y -= 50.0;
     }
-    if keyboard_input.pressed(KeyCode::ArrowUp) {
-        if state.y.abs() < 500. || state.y < 500.0 {
-            state.y += 50.0;
-        }
+    if keyboard_input.pressed(KeyCode::ArrowUp) && (state.y.abs() < 500. || state.y < 500.0) {
+        state.y += 50.0;
     }
 }
 
