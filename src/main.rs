@@ -1,13 +1,17 @@
 use std::f32::consts::PI;
 
 use bevy::{
+    math::bounding::{BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
-    sprite::collide_aabb::{collide, Collision},
 };
+
+use bevy::math::bounding::Aabb2d;
 use rand::Rng;
 
+const CAT_LEN: f32 = 40.0;
+
 const CAT_SIZE: Vec3 = Vec3::from_array([40.0, 40.0, 0.0]);
-const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
+//const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 
 const WALL_THICKNESS: f32 = 10.0;
 // x coordinates
@@ -31,14 +35,14 @@ struct PlayerState {
 #[derive(Debug, Component)]
 struct CenterPlayer;
 
-#[derive(Debug, Component)]
-struct SpeedPanel;
+//#[derive(Debug, Component)]
+//struct SpeedPanel;
+//
+//#[derive(Debug, Component)]
+//struct PosPanel;
 
-#[derive(Debug, Component)]
-struct PosPanel;
-
-#[derive(Event, Default)]
-struct CollisionEvent;
+//#[derive(Event, Default)]
+//struct CollisionEvent;
 
 #[derive(Component)]
 struct Collider;
@@ -119,7 +123,7 @@ impl WallBundle {
 
 fn roate(mut query: Query<&mut Transform, With<CenterPlayer>>, timer: Res<Time>) {
     let mut player_trans = query.single_mut();
-    player_trans.rotate_z(5.0 * timer.delta_seconds());
+    player_trans.rotate_z(5.0 * timer.delta_secs());
 }
 
 fn handle_move(
@@ -200,78 +204,78 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
         CenterPlayer,
     ));
 
-    commands
-        .spawn(
-            TextBundle {
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "X:".to_string(),
-                            style: TextStyle {
-                                font_size: 50.0,
-                                color: TEXT_COLOR,
-                                ..default()
-                            },
-                        },
-                        TextSection {
-                            value: "Y:".to_string(),
-                            style: TextStyle {
-                                font_size: 50.0,
-                                color: TEXT_COLOR,
-                                ..default()
-                            },
-                        },
-                    ],
-                    alignment: TextAlignment::Left,
-                    ..Default::default()
-                },
-                ..default()
-            }
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(10.0),
-                left: Val::Px(10.0),
-                ..default()
-            }),
-        )
-        .insert(SpeedPanel);
+    //commands
+    //    .spawn(
+    //        TextBundle {
+    //            text: Text {
+    //                sections: vec![
+    //                    TextSection {
+    //                        value: "X:".to_string(),
+    //                        style: TextStyle {
+    //                            font_size: 50.0,
+    //                            color: TEXT_COLOR,
+    //                            ..default()
+    //                        },
+    //                    },
+    //                    TextSection {
+    //                        value: "Y:".to_string(),
+    //                        style: TextStyle {
+    //                            font_size: 50.0,
+    //                            color: TEXT_COLOR,
+    //                            ..default()
+    //                        },
+    //                    },
+    //                ],
+    //                alignment: TextAlignment::Left,
+    //                ..Default::default()
+    //            },
+    //            ..default()
+    //        }
+    //        .with_style(Style {
+    //            position_type: PositionType::Absolute,
+    //            top: Val::Px(10.0),
+    //            left: Val::Px(10.0),
+    //            ..default()
+    //        }),
+    //    )
+    //    .insert(SpeedPanel);
 
-    commands
-        .spawn(
-            TextBundle {
-                text: Text {
-                    sections: vec![
-                        TextSection {
-                            value: "PosX:".to_string(),
-                            style: TextStyle {
-                                font_size: 50.0,
-                                color: TEXT_COLOR,
-                                ..default()
-                            },
-                        },
-                        TextSection {
-                            value: "PosY:".to_string(),
-                            style: TextStyle {
-                                font_size: 50.0,
-                                color: TEXT_COLOR,
-                                ..default()
-                            },
-                        },
-                    ],
+    //commands
+    //    .spawn(
+    //        TextBundle {
+    //            text: Text {
+    //                sections: vec![
+    //                    TextSection {
+    //                        value: "PosX:".to_string(),
+    //                        style: TextStyle {
+    //                            font_size: 50.0,
+    //                            color: TEXT_COLOR,
+    //                            ..default()
+    //                        },
+    //                    },
+    //                    TextSection {
+    //                        value: "PosY:".to_string(),
+    //                        style: TextStyle {
+    //                            font_size: 50.0,
+    //                            color: TEXT_COLOR,
+    //                            ..default()
+    //                        },
+    //                    },
+    //                ],
 
-                    alignment: TextAlignment::Left,
-                    ..Default::default()
-                },
-                ..default()
-            }
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(10.0),
-                right: Val::Px(10.0),
-                ..default()
-            }),
-        )
-        .insert(PosPanel);
+    //                alignment: TextAlignment::Left,
+    //                ..Default::default()
+    //            },
+    //            ..default()
+    //        }
+    //        .with_style(Style {
+    //            position_type: PositionType::Absolute,
+    //            top: Val::Px(10.0),
+    //            right: Val::Px(10.0),
+    //            ..default()
+    //        }),
+    //    )
+    //    .insert(PosPanel);
 
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
@@ -279,39 +283,39 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
     commands.spawn(WallBundle::new(WallLocation::Top));
 }
 
-fn handle_speedtext(state: Res<PlayerState>, mut query: Query<&mut Text, With<SpeedPanel>>) {
-    let mut text = query.single_mut();
-    text.sections[0].value = format!("X: {} ", state.x);
-    text.sections[1].value = format!("Y: {} ", state.y);
-}
+//fn handle_speedtext(state: Res<PlayerState>, mut query: Query<&mut Text, With<SpeedPanel>>) {
+//    let mut text = query.single_mut();
+//    text.sections[0].value = format!("X: {} ", state.x);
+//    text.sections[1].value = format!("Y: {} ", state.y);
+//}
+//
+//fn handle_postext(
+//    player_query: Query<&Transform, With<CenterPlayer>>,
+//    mut query: Query<&mut Text, With<PosPanel>>,
+//) {
+//    let translation = player_query.single().translation;
+//    let mut text = query.single_mut();
+//    text.sections[0].value = format!("PosX: {} ", translation.x);
+//    text.sections[1].value = format!("PosY: {} ", translation.y);
+//}
 
-fn handle_postext(
-    player_query: Query<&Transform, With<CenterPlayer>>,
-    mut query: Query<&mut Text, With<PosPanel>>,
-) {
-    let translation = player_query.single().translation;
-    let mut text = query.single_mut();
-    text.sections[0].value = format!("PosX: {} ", translation.x);
-    text.sections[1].value = format!("PosY: {} ", translation.y);
-}
-
-fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::Left) {
+fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<ButtonInput<KeyCode>>) {
+    if keyboard_input.pressed(KeyCode::ArrowLeft) {
         if state.x.abs() < 500. || state.x > -500.0 {
             state.x -= 50.0;
         }
     }
-    if keyboard_input.pressed(KeyCode::Right) {
+    if keyboard_input.pressed(KeyCode::AltRight) {
         if state.x.abs() < 500. || state.x < 500.0 {
             state.x += 50.0;
         }
     }
-    if keyboard_input.pressed(KeyCode::Down) {
+    if keyboard_input.pressed(KeyCode::ArrowDown) {
         if state.y.abs() < 500. || state.y > -500.0 {
             state.y -= 50.0;
         }
     }
-    if keyboard_input.pressed(KeyCode::Up) {
+    if keyboard_input.pressed(KeyCode::ArrowUp) {
         if state.y.abs() < 500. || state.y < 500.0 {
             state.y += 50.0;
         }
@@ -329,11 +333,12 @@ fn check_collider(
     let scale = query.single().scale;
     let mut delete_mirror = false;
     for (transform, mirror_if) in &collider_query {
-        let collision = collide(
-            player_trans,
-            scale.truncate(),
-            transform.translation,
-            transform.scale.truncate(),
+        let collision = ball_collision(
+            BoundingCircle::new(player_trans.truncate(), CAT_LEN / 2.0),
+            Aabb2d::new(
+                transform.translation.truncate(),
+                transform.scale.truncate() / 2.0,
+            ),
         );
 
         if let Some(coll) = collision {
@@ -343,7 +348,6 @@ fn check_collider(
             match coll {
                 Collision::Left | Collision::Right => state.x = -state.x,
                 Collision::Top | Collision::Bottom => state.y = -state.y,
-                Collision::Inside => { /* do nothing */ }
             }
             continue;
         }
@@ -354,6 +358,38 @@ fn check_collider(
         }
         state.mirror_exist = false;
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+enum Collision {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
+
+// Returns `Some` if `ball` collides with `bounding_box`.
+// The returned `Collision` is the side of `bounding_box` that `ball` hit.
+fn ball_collision(ball: BoundingCircle, bounding_box: Aabb2d) -> Option<Collision> {
+    if !ball.intersects(&bounding_box) {
+        return None;
+    }
+
+    let closest = bounding_box.closest_point(ball.center());
+    let offset: Vec2 = ball.center() - closest;
+    let side = if offset.x.abs() > offset.y.abs() {
+        if offset.x < 0. {
+            Collision::Left
+        } else {
+            Collision::Right
+        }
+    } else if offset.y > 0. {
+        Collision::Top
+    } else {
+        Collision::Bottom
+    };
+
+    Some(side)
 }
 
 fn main() {
@@ -367,10 +403,10 @@ fn main() {
                 roate,
                 check_collider,
                 generate_mirror,
-                handle_state_update.after(check_collider),
+                handle_state_update,
                 handle_move.after(handle_state_update),
             ),
         )
-        .add_systems(Update, (handle_speedtext, handle_postext))
+        //.add_systems(Update, (handle_speedtext, handle_postext))
         .run();
 }
