@@ -11,7 +11,7 @@ use rand::Rng;
 const CAT_LEN: f32 = 40.0;
 
 const CAT_SIZE: Vec3 = Vec3::from_array([40.0, 40.0, 0.0]);
-const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
+const TEXT_COLOR: Color = Color::srgb(0.5, 0.5, 1.0);
 
 const WALL_THICKNESS: f32 = 10.0;
 // x coordinates
@@ -21,7 +21,7 @@ const RIGHT_WALL: f32 = 900.;
 const BOTTOM_WALL: f32 = -500.;
 const TOP_WALL: f32 = 500.;
 
-const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
+const WALL_COLOR: Color = Color::srgb(0.8, 0.8, 0.8);
 
 const MIRROR_SIZE: Vec3 = Vec3::from_array([200.0, 40.0, 0.0]);
 
@@ -54,7 +54,8 @@ struct Mirror;
 struct WallBundle {
     // You can nest bundles inside of other bundles like this
     // Allowing you to compose their functionality
-    sprite_bundle: SpriteBundle,
+    sprite: Sprite,
+    transform: Transform,
     collider: Collider,
 }
 
@@ -99,21 +100,15 @@ impl WallBundle {
     // making our code easier to read and less prone to bugs when we change the logic
     fn new(location: WallLocation) -> WallBundle {
         WallBundle {
-            sprite_bundle: SpriteBundle {
-                transform: Transform {
-                    // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
-                    // This is used to determine the order of our sprites
-                    translation: location.position().extend(0.0),
-                    // The z-scale of 2D objects must always be 1.0,
-                    // or their ordering will be affected in surprising ways.
-                    // See https://github.com/bevyengine/bevy/issues/4149
-                    scale: location.size().extend(1.0),
-                    ..default()
-                },
-                sprite: Sprite {
-                    color: WALL_COLOR,
-                    ..default()
-                },
+            sprite: Sprite::from_color(WALL_COLOR, Vec2::ONE),
+            transform: Transform {
+                // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
+                // This is used to determine the order of our sprites
+                translation: location.position().extend(0.0),
+                // The z-scale of 2D objects must always be 1.0,
+                // or their ordering will be affected in surprising ways.
+                // See https://github.com/bevyengine/bevy/issues/4149
+                scale: location.size().extend(1.0),
                 ..default()
             },
             collider: Collider,
@@ -149,20 +144,17 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
     let pos_y: f32 = rng.gen_range(-500.0..500.0);
     let roat_z: f32 = rng.gen_range(0. ..2. * PI);
     commands.spawn((
-        SpriteBundle {
-            transform: Transform {
-                translation: Vec3 {
-                    x: pos_x,
-                    y: pos_y,
-                    z: 0.0,
-                },
-                rotation: Quat::from_rotation_z(roat_z),
-                scale: MIRROR_SIZE,
-                ..default()
+        Transform {
+            translation: Vec3 {
+                x: pos_x,
+                y: pos_y,
+                z: 0.0,
             },
-            sprite: Sprite { ..default() },
+            rotation: Quat::from_rotation_z(roat_z),
+            scale: MIRROR_SIZE,
             ..default()
         },
+        Sprite { ..default() },
         Mirror,
         Collider,
     ));
@@ -171,36 +163,30 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
     let pos_y: f32 = rng.gen_range(-300.0..300.0);
     let roat_z: f32 = rng.gen_range(0. ..2. * PI);
     commands.spawn((
-        SpriteBundle {
-            transform: Transform {
-                translation: Vec3 {
-                    x: pos_x,
-                    y: pos_y,
-                    z: 0.0,
-                },
-                rotation: Quat::from_rotation_z(roat_z),
-                scale: MIRROR_SIZE,
-                ..default()
+        Transform {
+            translation: Vec3 {
+                x: pos_x,
+                y: pos_y,
+                z: 0.0,
             },
-            sprite: Sprite { ..default() },
+            rotation: Quat::from_rotation_z(roat_z),
+            scale: MIRROR_SIZE,
             ..default()
         },
+        Sprite { ..default() },
         Mirror,
         Collider,
     ));
 }
 
 fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
     commands.spawn((
-        SpriteBundle {
-            transform: Transform {
-                scale: CAT_SIZE,
-                ..default()
-            },
-            sprite: Sprite { ..default() },
+        Transform {
+            scale: CAT_SIZE,
             ..default()
         },
+        Sprite { ..default() },
         CenterPlayer,
     ));
 
