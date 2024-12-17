@@ -11,7 +11,7 @@ use rand::Rng;
 const CAT_LEN: f32 = 40.0;
 
 const CAT_SIZE: Vec3 = Vec3::from_array([40.0, 40.0, 0.0]);
-//const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
+const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 
 const WALL_THICKNESS: f32 = 10.0;
 // x coordinates
@@ -35,11 +35,11 @@ struct PlayerState {
 #[derive(Debug, Component)]
 struct CenterPlayer;
 
-//#[derive(Debug, Component)]
-//struct SpeedPanel;
+#[derive(Debug, Component)]
+struct SpeedPanel;
 //
-//#[derive(Debug, Component)]
-//struct PosPanel;
+#[derive(Debug, Component)]
+struct PosPanel;
 
 //#[derive(Event, Default)]
 //struct CollisionEvent;
@@ -204,78 +204,70 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
         CenterPlayer,
     ));
 
-    //commands
-    //    .spawn(
-    //        TextBundle {
-    //            text: Text {
-    //                sections: vec![
-    //                    TextSection {
-    //                        value: "X:".to_string(),
-    //                        style: TextStyle {
-    //                            font_size: 50.0,
-    //                            color: TEXT_COLOR,
-    //                            ..default()
-    //                        },
-    //                    },
-    //                    TextSection {
-    //                        value: "Y:".to_string(),
-    //                        style: TextStyle {
-    //                            font_size: 50.0,
-    //                            color: TEXT_COLOR,
-    //                            ..default()
-    //                        },
-    //                    },
-    //                ],
-    //                alignment: TextAlignment::Left,
-    //                ..Default::default()
-    //            },
-    //            ..default()
-    //        }
-    //        .with_style(Style {
-    //            position_type: PositionType::Absolute,
-    //            top: Val::Px(10.0),
-    //            left: Val::Px(10.0),
-    //            ..default()
-    //        }),
-    //    )
-    //    .insert(SpeedPanel);
-
-    //commands
-    //    .spawn(
-    //        TextBundle {
-    //            text: Text {
-    //                sections: vec![
-    //                    TextSection {
-    //                        value: "PosX:".to_string(),
-    //                        style: TextStyle {
-    //                            font_size: 50.0,
-    //                            color: TEXT_COLOR,
-    //                            ..default()
-    //                        },
-    //                    },
-    //                    TextSection {
-    //                        value: "PosY:".to_string(),
-    //                        style: TextStyle {
-    //                            font_size: 50.0,
-    //                            color: TEXT_COLOR,
-    //                            ..default()
-    //                        },
-    //                    },
-    //                ],
-
-    //                alignment: TextAlignment::Left,
-    //                ..Default::default()
-    //            },
-    //            ..default()
-    //        }
-    //        .with_style(Style {
-    //            position_type: PositionType::Absolute,
-    //            top: Val::Px(10.0),
-    //            right: Val::Px(10.0),
-    //            ..default()
-    //        }),
-    //    )
-    //    .insert(PosPanel);
+    commands
+        .spawn((
+            Text::new("speed\n"),
+            TextFont {
+                font_size: 30.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+            SpeedPanel,
+            Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(10.0),
+                top: Val::Px(5.),
+                ..Default::default()
+            },
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont {
+                font_size: 20.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont {
+                font_size: 20.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+        ));
+    commands
+        .spawn((
+            Text::new("position\n"),
+            TextFont {
+                font_size: 30.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+            PosPanel,
+            Node {
+                position_type: PositionType::Absolute,
+                right: Val::Px(10.0),
+                top: Val::Px(5.),
+                ..Default::default()
+            },
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont {
+                font_size: 20.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+        ))
+        .with_child((
+            TextSpan::default(),
+            TextFont {
+                font_size: 20.0,
+                ..Default::default()
+            },
+            TextColor(TEXT_COLOR),
+        ));
 
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
@@ -283,21 +275,24 @@ fn setup(mut commands: Commands, _assert_server: Res<AssetServer>) {
     commands.spawn(WallBundle::new(WallLocation::Top));
 }
 
-//fn handle_speedtext(state: Res<PlayerState>, mut query: Query<&mut Text, With<SpeedPanel>>) {
-//    let mut text = query.single_mut();
-//    text.sections[0].value = format!("X: {} ", state.x);
-//    text.sections[1].value = format!("Y: {} ", state.y);
-//}
-//
-//fn handle_postext(
-//    player_query: Query<&Transform, With<CenterPlayer>>,
-//    mut query: Query<&mut Text, With<PosPanel>>,
-//) {
-//    let translation = player_query.single().translation;
-//    let mut text = query.single_mut();
-//    text.sections[0].value = format!("PosX: {} ", translation.x);
-//    text.sections[1].value = format!("PosY: {} ", translation.y);
-//}
+fn handle_speedtext(
+    state: Res<PlayerState>,
+    query: Single<Entity, (With<Text>, With<SpeedPanel>)>,
+    mut writer: TextUiWriter,
+) {
+    *writer.text(*query, 1) = format!("X: {}", state.x);
+    *writer.text(*query, 2) = format!("Y: {}", state.y);
+}
+
+fn handle_postext(
+    player_query: Query<&Transform, With<CenterPlayer>>,
+    query: Single<Entity, (With<Text>, With<PosPanel>)>,
+    mut writer: TextUiWriter,
+) {
+    let translation = player_query.single().translation;
+    *writer.text(*query, 1) = format!("X: {}", translation.x);
+    *writer.text(*query, 2) = format!("Y: {}", translation.y);
+}
 
 fn handle_state_update(mut state: ResMut<PlayerState>, keyboard_input: Res<ButtonInput<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::ArrowLeft) && (state.x.abs() < 500. || state.x > -500.0) {
@@ -322,7 +317,6 @@ fn check_collider(
     mirror_query: Query<Entity, With<Mirror>>,
 ) {
     let player_trans = query.single().translation;
-    let scale = query.single().scale;
     let mut delete_mirror = false;
     for (transform, mirror_if) in &collider_query {
         let collision = ball_collision(
@@ -399,6 +393,6 @@ fn main() {
                 handle_move.after(handle_state_update),
             ),
         )
-        //.add_systems(Update, (handle_speedtext, handle_postext))
+        .add_systems(Update, (handle_speedtext, handle_postext))
         .run();
 }
