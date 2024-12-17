@@ -152,7 +152,6 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
             },
             rotation: Quat::from_rotation_z(roat_z),
             scale: MIRROR_SIZE,
-            ..default()
         },
         Sprite { ..default() },
         Mirror,
@@ -171,7 +170,6 @@ fn generate_mirror(mut commands: Commands, mut state: ResMut<PlayerState>) {
             },
             rotation: Quat::from_rotation_z(roat_z),
             scale: MIRROR_SIZE,
-            ..default()
         },
         Sprite { ..default() },
         Mirror,
